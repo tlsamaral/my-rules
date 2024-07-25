@@ -4,16 +4,16 @@
     "terminal.integrated.gpuAcceleration": "off",
     "window.zoomLevel": 1,
     "symbols.hidesExplorerArrows": false,
-
     "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": "explicit",
-        "source.fixAll": "explicit"
+        "source.fixAll.eslint": true,
+        "source.fixAll": true,
     },
+    "files.autoSave": "onFocusChange",
     "workbench.iconTheme": "symbols",
     "files.eol": "\n",
     "editor.fontFamily": "JetBrains Mono",
     "editor.fontLigatures": true,
-    "editor.fontSize": 12,
+    "editor.fontSize": 11,
     "editor.lineHeight": 1.6,
     "editor.rulers": [80, 120],
     "workbench.startupEditor": "newUntitledFile",
@@ -25,5 +25,11 @@
     "editor.minimap.enabled": false,
     "editor.scrollbar.vertical": "hidden",
     "editor.scrollbar.horizontal": "hidden",
-    "prettier.endOfLine": "lf"
+    "window.commandCenter": false,
+    "workbench.layoutControl.enabled": false,
+    "window.menuBarVisibility": "compact",
+    "apc.font.family": "Roboto",
+    "apc.stylesheet": {
+        ".editor-actions": "display: none"
+    }
 }
