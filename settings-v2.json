@@ -1,0 +1,43 @@
+{
+    "editor.wordWrap": "on",
+    "diffEditor.wordWrap": "on",
+    "terminal.integrated.gpuAcceleration": "off",
+    "window.zoomLevel": 1,
+    "symbols.hidesExplorerArrows": false,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.fixAll": "explicit"
+    },
+    "files.autoSave": "onFocusChange",
+    "workbench.iconTheme": "symbols",
+    "files.eol": "\n",
+    "editor.fontFamily": "JetBrains Mono",
+    "editor.fontLigatures": true,
+    "editor.fontSize": 11,
+    "editor.lineHeight": 1.6,
+    "workbench.startupEditor": "newUntitledFile",
+    "editor.renderLineHighlight": "gutter",
+    "workbench.editor.labelFormat": "short",
+    "explorer.compactFolders": false,
+    "editor.semanticHighlighting.enabled": false,
+    "breadcrumbs.enabled": false,
+    "editor.minimap.enabled": false,
+    "editor.scrollbar.vertical": "hidden",
+    "editor.scrollbar.horizontal": "hidden",
+    "window.commandCenter": false,
+    "workbench.layoutControl.enabled": false,
+    "window.menuBarVisibility": "compact",
+    "apc.font.family": "Roboto",
+    "window.titleBarStyle": "custom",
+    "apc.stylesheet": {
+        ".editor-actions": "display: none"
+    },
+    "explorer.confirmDelete": false,
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+        "package.json": ".eslint*, .prettier*, tsconfig*, vite*, pnpm-lock*, package-lock*",
+        "tailwind.config*": "tailwind.config*, postcss.config*",
+        ".env.local": ".env*",
+        ".env": ".env*"
+    }
+}
