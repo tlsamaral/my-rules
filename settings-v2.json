@@ -11,9 +11,10 @@
     "files.autoSave": "onFocusChange",
     "workbench.iconTheme": "symbols",
     "files.eol": "\n",
+    "terminal.integrated.fontFamily": "JetBrains Mono",
     "editor.fontFamily": "JetBrains Mono",
     "editor.fontLigatures": true,
-    "editor.fontSize": 11,
+    "editor.fontSize": 12,
     "editor.lineHeight": 1.6,
     "workbench.startupEditor": "newUntitledFile",
     "editor.renderLineHighlight": "gutter",
@@ -39,5 +40,21 @@
         "tailwind.config*": "tailwind.config*, postcss.config*",
         ".env.local": ".env*",
         ".env": ".env*"
+    },
+    "workbench.colorTheme": "Vesper",
+    "terminal.integrated.env.windows": {},
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "biomejs.biome",
+    "[javascript]": {
+      "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[json]": {
+      "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[prisma]": {
+      "editor.defaultFormatter": "Prisma.prisma"
     }
 }
