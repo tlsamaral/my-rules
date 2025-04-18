@@ -9,4 +9,3 @@ module.exports = {
   bracketSpacing: true, // Adiciona espaçamento entre chaves e objetos
   // jsxBracketSameLine: false, // Quebra a linha após o `>` nas tags JSX
 };
-
