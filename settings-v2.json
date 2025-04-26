@@ -9,6 +9,7 @@
         "source.fixAll": "explicit"
     },
     "files.autoSave": "onFocusChange",
+    
     "workbench.iconTheme": "symbols",
     "files.eol": "\n",
     "terminal.integrated.fontFamily": "JetBrains Mono",
