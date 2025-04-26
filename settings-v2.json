@@ -4,7 +4,6 @@
     "terminal.integrated.gpuAcceleration": "off",
     "window.zoomLevel": 1,
     "symbols.hidesExplorerArrows": false,
-    
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "explicit",
         "source.fixAll": "explicit"
