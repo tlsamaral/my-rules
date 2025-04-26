@@ -7,6 +7,7 @@
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "explicit",
         "source.fixAll": "explicit"
+        
     },
     "files.autoSave": "onFocusChange",
     "workbench.iconTheme": "symbols",
