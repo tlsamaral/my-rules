@@ -25,3 +25,4 @@ export default [
   pluginReact.configs.flat.recommended,
   configPrettier, // Adiciona a configuração do Prettier para desativar regras conflitantes
 ];
+
