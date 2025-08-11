@@ -17,6 +17,7 @@ module.exports = {
       presets: ['@babel/preset-react'],
     },
     ecmaVersion: 'latest',
+    
     requireConfigFile: false,
     sourceType: 'module',
   },
