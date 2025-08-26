@@ -1,0 +1,263 @@
+it('should be able to get student enrollments', async () => {
+    const inMemoryStudentErpClient = new InMemoryStudentErpClient()
+    const inMemoryUsersRepository = new InMemoryUsersRepository()
+    const inMemoryStudentsRepository = new InMemoryStudentsRepository()
+    const inMemoryStudentEnrollmentsRepository =
+      new InMemoryStudentEnrollmentsRepository()
+
+    inMemoryStudentErpClient.students = [
+      {
+        ra: '12345678',
+        name: 'any_name',
+        email: 'any_email',
+        branchCode: 'any_branchCode',
+        active: true,
+      },
+    ]
+
+    Array.from({ length: 5 }).map((_, index, array) => {
+      inMemoryStudentErpClient.enrollments.push(
+        makeEnrollment({
+          termCode: index.toString(),
+          status: index === array.length - 1 ? 'ACTIVE' : 'COMPLETED',
+          termCount: index + 1,
+        }),
+      )
+    })
+
+    const hash = new BcryptHash()
+
+    sut = new LoginStudentFromErpUseCase(
+      inMemoryStudentErpClient,
+      inMemoryUsersRepository,
+      inMemoryStudentsRepository,
+      inMemoryStudentEnrollmentsRepository,
+      hash,
+    )
+
+    const { enrollments } = await sut.execute({
+      ra: '12345678',
+      cpf: '12345678',
+    })
+
+    expect(enrollments).toHaveLength(5)
+    expect(enrollments[4].termCount).toBe(5)
+    expect(enrollments[4].status).toBe('ACTIVE')
+  })
+
+
+import type { AdmissionType } from '@/core/types/admission-type'
+import type { ProgramLevel, EnrollmentStatus } from '@/core/types/student'
+import type { StudentEnrollmentRepository } from '@/domain/identity-access/application/repositories/student-enrollment-repository'
+import { StudentEnrollment } from '@/domain/identity-access/enterprise/entities/student-enrollment'
+
+export class InMemoryStudentEnrollmentsRepository
+  implements StudentEnrollmentRepository
+{
+  enrollments: {
+    studentId: string
+    id: string
+    programCode: string
+    programName: string
+    level: ProgramLevel
+    admissionType: AdmissionType
+    shift?: string | null
+    branchCode: string
+    status: EnrollmentStatus
+    termCode: string
+    termCount: number
+  }[] = []
+
+  async listByStudentId(studentId: string): Promise<StudentEnrollment[]> {
+    const studentEnrollments: StudentEnrollment[] = []
+
+    for (const enrollment of this.enrollments) {
+      studentEnrollments.push(
+        new StudentEnrollment({
+          id: enrollment.id,
+          studentId: enrollment.studentId,
+          programCode: enrollment.programCode,
+          programName: enrollment.programName,
+          level: enrollment.level,
+          admissionType: enrollment.admissionType,
+          termCode: enrollment.termCode,
+          termCount: enrollment.termCount,
+          branchCode: enrollment.branchCode,
+          status: enrollment.status,
+          shift: enrollment.shift,
+        }),
+      )
+    }
+
+    return studentEnrollments
+  }
+
+  async upsertManyFromErp(
+    studentId: string,
+    items: Array<{
+      programCode: string
+      programName: string
+      level: ProgramLevel
+      admissionType: AdmissionType
+      branchCode: string
+      status: EnrollmentStatus
+      shift?: string | null
+      termCode: string
+      termCount: number
+    }>,
+  ): Promise<void> {
+    const savedEnrollments = this.enrollments
+
+    for (const item of items) {
+      const existingEnrollment = savedEnrollments.find(
+        (enr) => enr.termCode === item.termCode,
+      )
+      if (existingEnrollment) {
+        this.enrollments = this.enrollments.map((enr) => {
+          if (enr.id === existingEnrollment.id) {
+            return { ...enr, ...item }
+          }
+          return enr
+        })
+      } else {
+        this.enrollments.push({ id: crypto.randomUUID(), ...item, studentId })
+      }
+    }
+  }
+}
+
+
+// domain/identity-access/application/use-cases/login-student-from-erp.ts
+import type { StudentErpClient } from '../ports/student-erp-client'
+import type { UserRepository } from '../repositories/user-repository'
+import type { StudentRepository } from '../repositories/student-repository'
+import type { StudentEnrollmentRepository } from '../repositories/student-enrollment-repository'
+import type { HashMaker } from '@domain/identity-access/services/hash'
+
+import { InvalidCredentialsError } from '@domain/identity-access/enterprise/errors/invalid-credentials'
+import { User } from '@domain/identity-access/enterprise/entities/user'
+import { randomUUID } from 'node:crypto'
+import type { EnrollmentStatus, ProgramLevel } from '@core/types/student'
+import type { AdmissionType } from '@core/types/admission-type'
+
+export interface LoginStudentInput {
+  ra: string
+  cpf: string
+}
+
+export interface LoginStudentOutput {
+  user: { id: string; name: string; role: 'STUDENT' }
+  student: {
+    id: string
+    ra: string
+    name: string
+    email: string | null
+    branchCode: string
+    active: boolean
+  }
+  enrollments: Array<{
+    id: string
+    programCode: string
+    programName: string
+    level: ProgramLevel
+    admissionType: AdmissionType
+    branchCode: string
+    status: EnrollmentStatus
+    shift: string | null
+    termCode: string
+    termCount: number
+  }>
+}
+
+export class LoginStudentFromErpUseCase {
+  constructor(
+    private erp: StudentErpClient,
+    private users: UserRepository,
+    private students: StudentRepository,
+    private enrollments: StudentEnrollmentRepository,
+    private hash: HashMaker,
+  ) {}
+
+  async execute({ ra, cpf }: LoginStudentInput): Promise<LoginStudentOutput> {
+    // 1) Validação + perfil no ERP
+    const erpProfile = await this.erp.validateAndFetchProfile(ra, cpf)
+
+    if (!erpProfile) {
+      throw new InvalidCredentialsError()
+    }
+
+    // 2) USER (cria se não existir; username = RA, senha inicial = CPF)
+    let user = await this.users.findByUsernameOrEmail(erpProfile.ra)
+    if (!user) {
+      const passwordHash = await this.hash.make(cpf)
+      user = new User({
+        id: randomUUID(),
+        name: erpProfile.name,
+        username: erpProfile.ra,
+        email: erpProfile.email ?? null,
+        passwordHash,
+        role: 'STUDENT',
+        active: true,
+        changePasswordOnNextLogin: false,
+        branchId: null,
+      })
+      await this.users.create(user)
+    }
+
+    // 3) STUDENT (dados pessoais)
+    let student = await this.students.findByRA(erpProfile.ra)
+    if (!student) {
+      student = await this.students.createFromErp(user.id, {
+        ra: erpProfile.ra,
+        name: erpProfile.name,
+        email: erpProfile.email,
+        branchCode: erpProfile.branchCode,
+        active: erpProfile.active,
+      })
+    } else {
+      // atualiza nome/email/branch/active se mudou
+      student = await this.students.updateFromErp(student.id, {
+        ra: erpProfile.ra,
+        name: erpProfile.name,
+        email: erpProfile.email,
+        branchCode: erpProfile.branchCode,
+        active: erpProfile.active,
+      })
+    }
+
+    // 4) ENROLLMENTS (sincroniza com ERP e retorna)
+    const erpEnrollments = await this.erp.getEnrollments(erpProfile.ra)
+    await this.enrollments.upsertManyFromErp(student.id, erpEnrollments)
+
+    const currentEnrollments = await this.enrollments.listByStudentId(
+      student.id,
+    )
+
+    return {
+      user: { id: user.id, name: user.props.name, role: 'STUDENT' },
+      student: {
+        id: student.id,
+        ra: student.props.ra,
+        name: student.props.name,
+        email: student.props.email ?? null,
+        branchCode: student.props.branchCode,
+        active: student.props.active,
+      },
+      enrollments: currentEnrollments.map((e) => ({
+        id: e.id,
+        programCode: e.props.programCode,
+        programName: e.props.programName,
+        level: e.props.level,
+        admissionType: e.props.admissionType,
+        branchCode: e.props.branchCode,
+        status: e.props.status,
+        shift: e.props.shift ?? null,
+        termCode: e.props.termCode,
+        termCount: e.props.termCount,
+      })),
+    }
+  }
+}
+
+
+Veja todo esse fluxo o use case ele pega os dados do port do meu erp que aqui no caso está mocado e atualiza no banco de dados do meu app, porém apenas um unico periodo desse deve estar ativo, quando eu dou um select no banco de dados do erp ele vai vir assim, por que o "ativo" seria o matriculado e já está implementada essa lógica, porém eu preciso testar isso aqui se eu dar um select hoje eu irei receber 8 semestres com o 8 ativo mas no semestre que vem eu terei 9 semestres com o 9 ativo o upsert precisa fazer isso porém como estou mocando os dados ali e injetando no sut estou com dificuldade de pensar em como testar isso.
