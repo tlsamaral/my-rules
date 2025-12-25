@@ -1,5 +1,6 @@
 // prettier.config.js
 module.exports = {
+  
   semi: false, // Adiciona ponto e vírgula no final das declarações
   singleQuote: true, // Usa aspas simples em vez de aspas duplas
   trailingComma: "all", // Adiciona vírgula no final de objetos e arrays
